@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lucky Gift</title>
+
+<style>
+body{
+margin:0;
+background:#111;
+overflow:hidden;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+font-family:sans-serif;
+color:white;
+}
+
+#box{
+width:220px;
+cursor:pointer;
+animation:shake 1s infinite;
+}
+
+@keyframes shake{
+0%{transform:rotate(0deg)}
+25%{transform:rotate(5deg)}
+50%{transform:rotate(-5deg)}
+75%{transform:rotate(5deg)}
+100%{transform:rotate(0deg)}
+}
+
+#result{
+position:fixed;
+top:0;
+left:0;
+width:100vw;
+height:100vh;
+object-fit:contain;
+display:none;
+background:black;
+}
+
+canvas{
+position:fixed;
+top:0;
+left:0;
+pointer-events:none;
+}
+</style>
+</head>
+
+<body>
+
+<img id="box" src="box.png">
+<img id="result">
+<audio id="sound" src="win.mp3"></audio>
+<canvas id="confetti"></canvas>
+
+<script>
+const box=document.getElementById("box")
+const resultImg=document.getElementById("result")
+const sound=document.getElementById("sound")
+const canvas=document.getElementById("confetti")
+const ctx=canvas.getContext("2d")
+
+canvas.width=window.innerWidth
+canvas.height=window.innerHeight
+
+let particles=[]
+let opened=false
+
+box.addEventListener("click",openGift)
+
+function openGift(){
+
+if(opened) return
+opened=true
+
+// chọn quà
+const r=Math.random()
+let gift
+
+if(r<0.5){
+gift="voucher.png"
+}
+else if(r<0.7){
+gift="qua6.png"
+}
+else{
+const gifts=["qua1.png","qua2.png","qua3.png","qua4.png","qua5.png"]
+gift=gifts[Math.floor(Math.random()*gifts.length)]
+}
+
+// rung
+if(navigator.vibrate){
+navigator.vibrate([200,100,300])
+}
+
+// phát nhạc (được phép vì có click)
+sound.play().catch(()=>{})
+
+// hiệu ứng bung hộp
+box.style.animation="none"
+box.style.transform="scale(0)"
+setTimeout(()=>{
+box.style.display="none"
+resultImg.src=gift
+resultImg.style.display="block"
+launchConfetti()
+},300)
+
+}
+
+// ===== CONFETTI SYSTEM =====
+function launchConfetti(){
+for(let i=0;i<200;i++){
+particles.push({
+x:Math.random()*canvas.width,
+y:-20,
+size:5+Math.random()*5,
+speed:2+Math.random()*4,
+color:`hsl(${Math.random()*360},100%,50%)`
+})
+}
+animate()
+}
+
+function animate(){
+ctx.clearRect(0,0,canvas.width,canvas.height)
+particles.forEach(p=>{
+p.y+=p.speed
+ctx.fillStyle=p.color
+ctx.fillRect(p.x,p.y,p.size,p.size)
+})
+particles=particles.filter(p=>p.y<canvas.height)
+if(particles.length>0){
+requestAnimationFrame(animate)
+}
+}
+</script>
+
+</body>
+</html>
