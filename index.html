@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lucky Gift</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+body{
+background:#111;
+height:100vh;
+overflow:hidden;
+display:flex;
+justify-content:center;
+align-items:center;
+font-family:sans-serif;
+color:white;
+flex-direction:column;
+}
+
+#box{
+width:220px;
+cursor:pointer;
+transition:transform 0.2s ease;
+}
+
+.shake{
+animation:shake 0.5s infinite;
+}
+
+@keyframes shake{
+0%{transform:rotate(0deg)}
+25%{transform:rotate(5deg)}
+50%{transform:rotate(-5deg)}
+75%{transform:rotate(4deg)}
+100%{transform:rotate(0deg)}
+}
+
+#gift{
+position:absolute;
+width:100vw;
+height:100vh;
+object-fit:contain;
+background:#000;
+display:none;
+}
+
+canvas{
+position:fixed;
+top:0;
+left:0;
+pointer-events:none;
+}
+
+#hint{
+margin-top:20px;
+opacity:0.7;
+font-size:18px;
+}
+</style>
+</head>
+
+<body>
+
+<img id="box" src="box.png">
+<div id="hint">Chạm vào hộp để lắc 🎁</div>
+<img id="gift">
+<audio id="sound" src="win.mp3" preload="auto"></audio>
+<canvas id="confettiCanvas"></canvas>
+
+<script>
+const box=document.getElementById("box")
+const giftImg=document.getElementById("gift")
+const sound=document.getElementById("sound")
+const hint=document.getElementById("hint")
+
+const canvas=document.getElementById("confettiCanvas")
+const ctx=canvas.getContext("2d")
+canvas.width=window.innerWidth
+canvas.height=window.innerHeight
+
+window.addEventListener("resize",()=>{
+canvas.width=window.innerWidth
+canvas.height=window.innerHeight
+})
+
+let opened=false
+
+// ===== RANDOM QUÀ =====
+function randomGift(){
+const r=Math.random()
+if(r<0.6) return "voucher.png"
+else{
+const gifts=["qua1.png","qua2.png","qua3.png","qua4.png","qua5.png"]
+return gifts[Math.floor(Math.random()*gifts.length)]
+}
+}
+
+// ===== CONFETTI ENGINE (native canvas, không CDN) =====
+let particles=[]
+
+function createConfetti(){
+for(let i=0;i<200;i++){
+particles.push({
+x:canvas.width/2,
+y:canvas.height/2,
+vx:(Math.random()-0.5)*8,
+vy:(Math.random()-0.5)*8,
+size:Math.random()*8+4,
+life:100
+})
+}
+}
+
+function updateConfetti(){
+ctx.clearRect(0,0,canvas.width,canvas.height)
+
+particles.forEach(p=>{
+p.x+=p.vx
+p.y+=p.vy
+p.vy+=0.05
+p.life--
+ctx.fillStyle=`hsl(${Math.random()*360},100%,50%)`
+ctx.fillRect(p.x,p.y,p.size,p.size)
+})
+
+particles=particles.filter(p=>p.life>0)
+
+if(particles.length>0){
+requestAnimationFrame(updateConfetti)
+}
+}
+
+// ===== MỞ HỘP =====
+function openBox(){
+
+if(opened) return
+opened=true
+
+box.classList.remove("shake")
+box.src="box-open.png"
+
+setTimeout(()=>{
+
+const gift=randomGift()
+giftImg.src=gift
+giftImg.style.display="block"
+box.style.display="none"
+hint.style.display="none"
+
+// nhạc
+sound.play().catch(()=>{})
+
+// rung (Android & 1 số thiết bị)
+if(navigator.vibrate){
+navigator.vibrate([200,100,300])
+}
+
+// confetti
+createConfetti()
+updateConfetti()
+
+},800)
+}
+
+// ===== LẮC HỘP =====
+box.addEventListener("click",()=>{
+if(opened) return
+box.classList.add("shake")
+
+// sau 1.5s tự mở
+setTimeout(openBox,1500)
+})
+</script>
+
+</body>
+</html>
